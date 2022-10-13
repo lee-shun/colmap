@@ -1,5 +1,12 @@
+
 COLMAP
 ======
+
+My Modify
+---------
+
+1. Some comments
+2. TODO: GPS+fusion..
 
 About
 -----
