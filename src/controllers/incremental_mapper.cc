@@ -449,6 +449,7 @@ void IncrementalMapperController::Reconstruct(
         }
       }
 
+      // 2视图几何
       PrintHeading1(StringPrintf("Initializing with image pair #%d and #%d",
                                  image_id1, image_id2));
       const bool reg_init_success = mapper.RegisterInitialImagePair(
@@ -465,8 +466,11 @@ void IncrementalMapperController::Reconstruct(
         break;
       }
 
+      // 全局BA
       AdjustGlobalBundle(*options_, &mapper);
+      // 滤除大重投影误差的三维点, 打印一下观测数
       FilterPoints(*options_, &mapper);
+      // 打印一下图像数,不过总处理图像数小于20不进行filter
       FilterImages(*options_, &mapper);
 
       // Initial image pair failed to register.
@@ -491,7 +495,7 @@ void IncrementalMapperController::Reconstruct(
     Callback(INITIAL_IMAGE_PAIR_REG_CALLBACK);
 
     ////////////////////////////////////////////////////////////////////////////
-    // Incremental mapping
+    // Incremental mapping 主要的工作
     ////////////////////////////////////////////////////////////////////////////
 
     size_t snapshot_prev_num_reg_images = reconstruction.NumRegImages();
@@ -508,6 +512,7 @@ void IncrementalMapperController::Reconstruct(
 
       reg_next_success = false;
 
+      // 使用策略得分去选择next image
       const std::vector<image_t> next_images =
           mapper.FindNextImages(options_->Mapper());
 
@@ -515,6 +520,7 @@ void IncrementalMapperController::Reconstruct(
         break;
       }
 
+      // 选出了几张下一张图, 就最大试多少次
       for (size_t reg_trial = 0; reg_trial < next_images.size(); ++reg_trial) {
         const image_t next_image_id = next_images[reg_trial];
         const Image& next_image = reconstruction.Image(next_image_id);
@@ -527,13 +533,16 @@ void IncrementalMapperController::Reconstruct(
                                   next_image.NumObservations())
                   << std::endl;
 
+        // 计算下一帧的位姿
         reg_next_success =
             mapper.RegisterNextImage(options_->Mapper(), next_image_id);
 
+        // 三角化, local BA
         if (reg_next_success) {
           TriangulateImage(*options_, next_image, &mapper);
           IterativeLocalRefinement(*options_, next_image_id, &mapper);
 
+          // 满足约束条件之后, 启用全局BA
           if (reconstruction.NumRegImages() >=
                   options_->ba_global_images_ratio * ba_prev_num_reg_images ||
               reconstruction.NumRegImages() >=
@@ -561,6 +570,7 @@ void IncrementalMapperController::Reconstruct(
 
           Callback(NEXT_IMAGE_REG_CALLBACK);
 
+          // 一旦成功了, 就直接出去了
           break;
         } else {
           std::cout << "  => Could not register, trying another image."
@@ -577,6 +587,7 @@ void IncrementalMapperController::Reconstruct(
         }
       }
 
+      // 太多的图使用了同几张图进行reg, 就直接跳出大循环
       const size_t max_model_overlap =
           static_cast<size_t>(options_->max_model_overlap);
       if (mapper.NumSharedRegImages() >= max_model_overlap) {
@@ -593,7 +604,7 @@ void IncrementalMapperController::Reconstruct(
       } else {
         prev_reg_next_success = reg_next_success;
       }
-    }
+    }  // 增量式regsitration 主循环
 
     if (IsStopped()) {
       const bool kDiscardReconstruction = false;

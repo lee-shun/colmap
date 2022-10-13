@@ -143,6 +143,7 @@ void IncrementalMapper::EndReconstruction(const bool discard) {
   triangulator_.reset();
 }
 
+// 寻找初始像对
 bool IncrementalMapper::FindInitialImagePair(const Options& options,
                                              image_t* image_id1,
                                              image_t* image_id2) {
@@ -186,6 +187,7 @@ bool IncrementalMapper::FindInitialImagePair(const Options& options,
 
       init_image_pairs_.insert(pair_id);
 
+      // 只要满足几何约束, 就马上返回了, 因为是两个vector都是排好序的
       if (EstimateInitialTwoViewGeometry(options, *image_id1, *image_id2)) {
         return true;
       }
@@ -238,6 +240,7 @@ std::vector<image_t> IncrementalMapper::FindNextImages(const Options& options) {
       continue;
     }
 
+    // 类似于贪心算法
     // If image has been filtered or failed to register, place it in the
     // second bucket and prefer images that have not been tried before.
     const float rank = rank_image_func(image.second);
@@ -282,6 +285,7 @@ bool IncrementalMapper::RegisterInitialImagePair(const Options& options,
   // Estimate two-view geometry
   //////////////////////////////////////////////////////////////////////////////
 
+  // 检查是否满足几何约束
   if (!EstimateInitialTwoViewGeometry(options, image_id1, image_id2)) {
     return false;
   }
@@ -801,6 +805,7 @@ void IncrementalMapper::ClearModifiedPoints3D() {
   triangulator_->ClearModifiedPoints3D();
 }
 
+// 找第一张初始图像, 返回的是可行的image_id的vector
 std::vector<image_t> IncrementalMapper::FindFirstInitialImage(
     const Options& options) const {
   // Struct to hold meta-data for ranking images.
@@ -817,6 +822,9 @@ std::vector<image_t> IncrementalMapper::FindFirstInitialImage(
   // correspondences.
   std::vector<ImageInfo> image_infos;
   image_infos.reserve(reconstruction_->NumImages());
+
+  // reconstruction 中持有所有的重建所需要的数据
+  // Images()返回的是一个unordered_map<image_id, class image>
   for (const auto& image : reconstruction_->Images()) {
     // Only images with correspondences can be registered.
     if (image.second.NumCorrespondences() == 0) {
@@ -871,6 +879,7 @@ std::vector<image_t> IncrementalMapper::FindFirstInitialImage(
   return image_ids;
 }
 
+// 找第二张图像
 std::vector<image_t> IncrementalMapper::FindSecondInitialImage(
     const Options& options, const image_t image_id1) const {
   const CorrespondenceGraph& correspondence_graph =

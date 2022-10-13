@@ -199,6 +199,8 @@ void SiftFeatureExtractor::Run() {
       break;
     }
 
+    // empty image information (including features, descriptors,
+    // cameras...)
     internal::ImageData image_data;
     image_data.status =
         image_reader_.Next(&image_data.camera, &image_data.image,
