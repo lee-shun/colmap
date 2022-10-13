@@ -62,6 +62,7 @@ void AdjustGlobalBundle(const IncrementalMapperOptions& options,
     custom_ba_options.solver_options.max_linear_solver_iterations = 200;
   }
 
+  // PBA 需要一定的条件限制
   PrintHeading1("Global bundle adjustment");
   if (options.ba_global_use_pba && !options.fix_existing_images &&
       num_reg_images >= kMinNumRegImagesForFastBA &&
@@ -540,6 +541,7 @@ void IncrementalMapperController::Reconstruct(
         // 三角化, local BA
         if (reg_next_success) {
           TriangulateImage(*options_, next_image, &mapper);
+          // 此处的BA是单线程BA
           IterativeLocalRefinement(*options_, next_image_id, &mapper);
 
           // 满足约束条件之后, 启用全局BA
@@ -551,6 +553,7 @@ void IncrementalMapperController::Reconstruct(
                   options_->ba_global_points_ratio * ba_prev_num_points ||
               reconstruction.NumPoints3D() >=
                   options_->ba_global_points_freq + ba_prev_num_points) {
+            // 全局BA按照条件可能使用PBA
             IterativeGlobalRefinement(*options_, &mapper);
             ba_prev_num_points = reconstruction.NumPoints3D();
             ba_prev_num_reg_images = reconstruction.NumRegImages();
