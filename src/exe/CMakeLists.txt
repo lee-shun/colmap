@@ -47,6 +47,9 @@ COLMAP_ADD_EXECUTABLE(colmap_exe
     vocab_tree.cc)
 set_target_properties(colmap_exe PROPERTIES OUTPUT_NAME colmap)
 
+COLMAP_ADD_EXECUTABLE(add_prior_pose add_prior_pose.cpp)
+set_target_properties(add_prior_pose PROPERTIES OUTPUT_NAME add_prior_pose)
+
 COLMAP_ADD_SOURCES(
     feature.h feature.cc
     sfm.h sfm.cc
