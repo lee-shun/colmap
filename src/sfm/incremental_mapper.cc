@@ -285,7 +285,7 @@ bool IncrementalMapper::RegisterInitialImagePair(const Options& options,
   // Estimate two-view geometry
   //////////////////////////////////////////////////////////////////////////////
 
-  // 检查是否满足几何约束
+  // 计算两视图位姿, 并检查是否满足几何约束
   if (!EstimateInitialTwoViewGeometry(options, image_id1, image_id2)) {
     return false;
   }
@@ -309,8 +309,10 @@ bool IncrementalMapper::RegisterInitialImagePair(const Options& options,
   RegisterImageEvent(image_id1);
   RegisterImageEvent(image_id2);
 
+  // database 获取相应的图
   const CorrespondenceGraph& correspondence_graph =
       database_cache_->CorrespondenceGraph();
+  // 从图(应该是表示共视关系)中找到对应的匹配vec
   const FeatureMatches& corrs =
       correspondence_graph.FindCorrespondencesBetweenImages(image_id1,
                                                             image_id2);

@@ -323,6 +323,7 @@ const ceres::Solver::Summary& BundleAdjuster::Summary() const {
   return summary_;
 }
 
+// 把整个优化问题准备好
 void BundleAdjuster::SetUp(Reconstruction* reconstruction,
                            ceres::LossFunction* loss_function) {
   // Warning: AddPointsToProblem assumes that AddImageToProblem is called first.

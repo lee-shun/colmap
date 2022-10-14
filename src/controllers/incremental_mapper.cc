@@ -607,7 +607,7 @@ void IncrementalMapperController::Reconstruct(
       } else {
         prev_reg_next_success = reg_next_success;
       }
-    }  // 增量式regsitration 主循环
+    }  // 增量式registration 主循环
 
     if (IsStopped()) {
       const bool kDiscardReconstruction = false;

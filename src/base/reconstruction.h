@@ -587,6 +587,7 @@ bool Reconstruction::Align(const std::vector<std::string>& image_names,
   return true;
 }
 
+// 使用ransac 找到最佳sim3变换, 应用到图像位姿和三维点上
 template <bool kEstimateScale>
 bool Reconstruction::AlignRobust(const std::vector<std::string>& image_names,
                                  const std::vector<Eigen::Vector3d>& locations,
@@ -637,6 +638,8 @@ bool Reconstruction::AlignRobust(const std::vector<std::string>& image_names,
   }
 
   SimilarityTransform3 transform = SimilarityTransform3(report.model);
+
+  // apply the transformation to all the poses and 3D points
   Transform(transform);
 
   if (tform != nullptr) {
